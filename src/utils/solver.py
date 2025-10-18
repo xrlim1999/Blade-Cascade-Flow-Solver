@@ -2,29 +2,47 @@ import numpy as np
 from .martensen_kernels import coupling_coefficient_bound, coupling_coefficient_trailing
 
 
-def build_Cds(ds: np.ndarray) -> np.ndarray:
+def build_Cds(ds: np.ndarray, i_le: int, include_self=False) -> np.ndarray:
     """
-    Chordwise integral operator: Cds = (lower-triangular ones) @ diag(ds)
+    Set the influence matrix of each panel by the upstream panels.
+        - Top and bottom panels do not affect each other
+        - Only panels (n) upstream have an effect on the current panel (m)
+
+    Return Aerofoil Surface integral operator: Cds = influence of upstream panels in
+                                                     top and bottom surfaces
     """
     Ns = len(ds)
-    C  = np.tril(np.ones((Ns, Ns)))
+    Cds = np.zeros((Ns, Ns), dtype=float)
 
-    return C @ np.diag(ds)
+    k_top  = 0 if include_self else 1   # top: use UPPER triangle
+    k_bot  = 0 if include_self else -1  # bottom: use LOWER triangle
 
-def build_IJ(K: np.ndarray, L: np.ndarray, ds: np.ndarray, r: float, p: int):
+    # --- TOP surface block: indices [0 : i_le)
+    ds_top = ds[:i_le]
+    L_top = np.triu(np.ones((i_le, i_le)), k=k_top)
+    Cds[:i_le, :i_le] = L_top @ np.diag(ds_top)
+
+    # --- BOTTOM surface block: indices [i_le : m)
+    ds_bot = ds[i_le:]
+    L_bot = np.tril(np.ones((Ns - i_le, Ns - i_le)), k=k_bot)  # exclude self
+    Cds[i_le:, i_le:] = L_bot @ np.diag(ds_bot)
+
+    return Cds
+
+def build_IJ(K: np.ndarray, L: np.ndarray, ds: np.ndarray, r: float, p: int, i_le: int):
     """
     Return (I, J, A) for Fourier mode p.
       I = K  (bound-vortex block)
       J = -(i*m/r) * (L @ Cds)  (trailing-sheet block)
       A = I + J
     """
-    Cds = build_Cds(ds)
+    Cds = build_Cds(ds, i_le)
     I = K.astype(complex)
     J = -(1j * p / r) * (L @ Cds)
 
     return I, J, I + J
 
-def assemble_modes(K: np.ndarray, L: np.ndarray, ds: np.ndarray, r: float, A_modes: np.ndarray):
+def assemble_modes(K: np.ndarray, L: np.ndarray, ds: np.ndarray, r: float, A_modes: np.ndarray, i_le: int):
     """
     Sum over modes p with user weights A_p:
       A_total = sum_p A_p * (I^{(p)} + J^{(p)})
@@ -32,7 +50,7 @@ def assemble_modes(K: np.ndarray, L: np.ndarray, ds: np.ndarray, r: float, A_mod
     A_tot = np.zeros_like(K, dtype=complex)
 
     for p, Ap in enumerate(np.asarray(A_modes)):
-        _, _, A_p = build_IJ(K, L, ds, r, p=p)
+        _, _, A_p = build_IJ(K, L, ds, r, p, i_le)
         A_tot += Ap * A_p
 
     return A_tot
@@ -122,6 +140,9 @@ def solve_cascade_iterative(geom, flow, A_modes, rhs: np.ndarray,
     V_inf = flow["V"]
     Omega = flow.get("Omega", 0.0)
 
+    # --- LE index ---
+    i_le = int(np.argmin(xmid))
+
     # --- build 2D kernel (K) ---
     K = coupling_coefficient_bound(geom)
 
@@ -135,7 +156,7 @@ def solve_cascade_iterative(geom, flow, A_modes, rhs: np.ndarray,
         L, beta_wake_init_updated = coupling_coefficient_trailing(geom, beta_wake_init=beta_wake_init)
 
         # --- construct K_mn using fourier modes ---
-        K_mn = assemble_modes(K, L, ds, r, A_modes)
+        K_mn = assemble_modes(K, L, ds, r, A_modes, i_le)
 
         # --- solve for bound vorticity ---
         gamma_b = solve_gamma(K_mn, ds, rhs)
