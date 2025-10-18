@@ -32,17 +32,14 @@ The surface is divided into *m* linear panels, each carrying a **bound vortex el
 ### 2. **Boundary Conditions**
 The impermeability condition is enforced at the control point of each panel:
 
-\[
-U_\infty \cos(\phi_i) + (V_\infty - \Omega r)\sin(\phi_i) + 
-\sum_{j=1}^{m} (C_{ij} \gamma_j) = 0
-\]
+$U_\infty \cos(\phi_i) + (V_\infty - \Omega r)\sin(\phi_i) + \sum_{j=1}^{m} (L_{ij}C_{ij} \gamma_j) = 0$
 
-where \(C_{ij}\) is the influence coefficient from panel *j* to control point *i*, assembled via **Martensen’s periodic kernel** for cascades.
+where $\(L_{ij}C_{ij}\)$ is the influence coefficient from panel *j* to control point *i*, assembled via **Martensen’s periodic kernel** for cascades.
 
 ### 3. **Coupling Matrices**
 Two integral operators are used:
-- \(C\) — the **bound vortex coupling** (panel influence)
-- \(L\) — the **wake influence** (trailing vortex sheet coupling)  
+- $\(C\)$ — the **bound vortex coupling** (panel influence)
+- $\(L\)$ — the **wake influence** (trailing vortex sheet coupling)  
 constructed using chordwise integration operators \(Cds\) and \(Lds\) that distinguish **upper** and **lower** surface influences.
 
 ### 4. **Wake Iteration**
@@ -50,8 +47,8 @@ The **trailing-edge wake direction** is iteratively corrected until the exit flo
 This ensures a physically consistent, periodic downstream flow.
 
 ### 5. **Performance Calculation**
-After solving for the circulation distribution \(\gamma(s)\), the solver computes:
-- Surface velocity and pressure coefficient \(C_p\)
+After solving for the circulation distribution $\(\gamma(s)\)$, the solver computes:
+- Surface velocity and pressure coefficient $\(C_p\)$
 - Sectional lift and moment
 - Flow exit angles and turning
 - Total blade row forces, torque, and power (for rotating cascades)
@@ -70,12 +67,8 @@ After solving for the circulation distribution \(\gamma(s)\), the solver compute
 
 - Linear vortex element panel method (Ch. 3–5)  
 - Cascade influence matrices using Martensen kernels (Ch. 6)  
-- Periodic wake treatment and coupling coefficients \(K_{mn}\), \(L_{mn}\) (Ch. 7)  
+- Periodic wake treatment and coupling coefficients $\(K_{mn}\)$, $\(L_{mn}\)$ (Ch. 7)  
 - Iterative wake alignment for cascade consistency  
 
 *(Viscous layer, separation, and loss models from later chapters are not yet included.)*
-
----
-
-## 🧰 **Repository Structure**
 
