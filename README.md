@@ -43,7 +43,7 @@ Two integral operators are used:
 constructed using chordwise integration operators \(Cds\) and \(Lds\) that distinguish **upper** and **lower** surface influences.
 
 ### 4. **Wake Iteration**
-The **trailing-edge wake direction** is iteratively corrected until the exit flow angle \(\beta_{\text{exit}}\) matches the wake direction \(\beta_{\text{wake}}\) within a given tolerance.  
+The **trailing-edge wake direction** is iteratively corrected until the exit flow angle $\(\beta_{\text{exit}}\)$ matches the wake direction $\(\beta_{\text{wake}}\)$ within a given tolerance.  
 This ensures a physically consistent, periodic downstream flow.
 
 ### 5. **Performance Calculation**
