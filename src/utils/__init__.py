@@ -10,6 +10,11 @@ If you want something more specific, you can still do:
     from utils.geometry import load_airfoil_xy
 """
 
+# Solver Runner
+from .runner import(
+    solve_blade_row
+)
+
 # Results initialisation
 from .results_create_save import (
     create_results,
@@ -61,6 +66,8 @@ from .classes import (
 )
 
 __all__ = [
+    # --- solver runner ---
+    "solve_blade_row",
     # --- results initialisation ---
     "create_results", "create_blade", "create_flow", "save_results_section",
     # --- geometry ---

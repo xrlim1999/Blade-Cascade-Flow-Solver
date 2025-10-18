@@ -61,7 +61,7 @@ results_fan, results_cascade = create_results(n_sections, n_stages)
 Solve
 """
 # --- Fourier modes ---
-A_modes = np.array([1.0, 0.25, 0.1])
+A_modes = np.array([1.0, 0.0, 0.0])
 
 # --- upacking (these are same for all stages for now) ---
 r_element_arr    = blade_profile["r_element"] 
