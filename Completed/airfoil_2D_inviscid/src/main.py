@@ -12,14 +12,15 @@ if __name__ == "__main__":
 
     results, airfoil, flowfield = solve_airfoil(
         # geometry / discretization
-        airfoil_tilt_deg = -20.0, # (+ve --> upwards rotation of LE)
+        airfoil_tilt_deg = 0.0, # (+ve --> upwards rotation of LE)
         m                = 100 ,
-        airfoil_path     = "data/aerofoil_coords.txt",
+        airfoil_path     = "data/NACA0012.txt",
 
         # flow operating condition
         rho        = 1.225, 
         W0         = 50.0,
-        alpha0_deg = 0.0  , # (+ve --> upwards pointing flow)
+        dynvisc    = 1.81e-5,
+        alpha0_deg = 15.0  , # (+ve --> upwards pointing flow)
 
         # print conditions
         plot_cp = True,

@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
         # flow operating condition
         rho        = 1.225, 
-        dynvisc    = 1.81e-5
+        dynvisc    = 1.81e-5,
         W0         = 50.0,
         alpha0_deg = 0.0  , # (+ve --> upwards pointing flow)
 

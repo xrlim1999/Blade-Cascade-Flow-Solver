@@ -77,7 +77,7 @@ def airfoil_performance(geom: dict, flow: dict, coup, gamma_b,
     circulation = np.sum(gamma_b * ds)
 
     # --- Lift and Lift Coefficient (per dr) ---
-    CL   = 2 * circulation / (U_1 * chord)
+    CL   = 2.0 * circulation / (U_1 * chord)
     lift = CL * (0.5 * rho * (U_1**2) * chord)
 
     # --- Surface Velocity ---

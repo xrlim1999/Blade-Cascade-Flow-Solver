@@ -41,18 +41,19 @@ class FlowSection:
     """
     Represents the flowfield parameters the blade is subjected to.
     """
-    def __init__(self, alpha_in: float, W: float, rho: float):
+    def __init__(self, alpha_in: float, W: float, rho: float, dynvisc: float):
         
         a    = np.deg2rad(alpha_in)
         U, V = W*np.cos(a), W*np.sin(a)
 
         # store flow datas
         self.flow = dict()
-        self.flow["U"]       = float(U)                    # blade inlet U              [m/s]
-        self.flow["V"]       = float(V)                    # blade inlet V              [m/s]
-        self.flow["W"]       = float(W)                    # blade inlet absolute speed [m/s]
-        self.flow["alpha_1"] = float(a) # inlet flow angle           [deg]
-        self.flow["rho"]     = float(rho)                  # inlet flow air density     [kg/m^3]]
+        self.flow["U"]       = float(U)   # blade inlet U              [m/s]
+        self.flow["V"]       = float(V)   # blade inlet V              [m/s]
+        self.flow["W"]       = float(W)   # blade inlet absolute speed [m/s]
+        self.flow["alpha_1"] = float(a)   # inlet flow angle           [deg]
+        self.flow["rho"]     = float(rho) # inlet flow air density     [kg/m^3]]
+        self.flow["Re"]      = float(rho * W / dynvisc) # dynamic viscosity [kg/(m s)]
 
 class AirfoilSolver:
     """
@@ -79,7 +80,7 @@ class AirfoilSolver:
     
     def print_results(self):
         # Display Results
-        display_airfoil_performance(self.results, self.airfoil)
+        display_airfoil_performance(self.results, self.flow, self.airfoil)
 
     def plot_airfoil(self, plot_save=True):
         airfoil_visualisation(self.geom, plot_save=plot_save)

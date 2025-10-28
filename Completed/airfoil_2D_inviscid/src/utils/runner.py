@@ -14,6 +14,7 @@ def solve_airfoil(
     # flow operating condition
     rho: float,
     W0: float,
+    dynvisc: float,
     alpha0_deg: float,
 
     # print conditions
@@ -33,7 +34,7 @@ def solve_airfoil(
 
     # --- airfoil and flow (initialisation) ---
     airfoil_section = AirfoilSection(airfoil_path, m, airfoil_tilt_deg)
-    flow_section    = FlowSection(alpha0_deg, W0, rho)
+    flow_section    = FlowSection(alpha0_deg, W0, rho, dynvisc)
 
     # --- solver (initialisation) ---
     solver = AirfoilSolver(airfoil_section, flow_section)

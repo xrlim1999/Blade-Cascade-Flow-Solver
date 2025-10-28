@@ -75,18 +75,57 @@ def airfoil_performance(geom: dict, flow: dict, coup, gamma_b,
     # --- airfoil surface pressure ---
     # Induced tangential velocity from the bound sheet
     T = build_tangential_matrix_isolated(xmid, ymid, ds, cosine, sine)
-    Vs = W_1* np.cos(alpha_1 - slope) + T @ gamma_b  # shape (m,)
+    Vs = W_1 * np.cos(alpha_1 - slope) + T @ gamma_b  # shape (m,)
 
-    Cp = 1 - (Vs / U_1)**2
+    Cp = 1 - (Vs / W_1)**2
 
-    # --- vorticity and circulation ---
-    # COMPUTE FROM C_p value !!! 
-    """ REDO THIS SECTION """
-    circulation = np.sum(gamma_b * ds)
+    # --- forces (x & y direction) ---
+    q_inf = 0.5 * rho * (W_1**2) # dynamic pressure [Pa]
+    
+    # xy-axis (parallel, normal) vector
+    nx, ny = sine, -cosine
 
-    # --- Lift and Lift Coefficient (per dr) ---
-    CL   = 2.0 * circulation / (U_1 * chord)
-    lift = CL * (0.5 * rho * (U_1**2) * chord)
+    # force per panel
+    scalar = - q_inf * Cp * ds
+    dF_x = scalar * nx # Fx (x-direction)
+    dF_y = scalar * ny # Fy (y-direction)
+    dF   = np.column_stack((dF_x, dF_y)) # (Fx, Fy)
+
+    # total force
+    F_x, F_y = dF.sum(axis=0)
+    F_xy_vec = np.array([F_x, F_y])
+
+    # --- forces (flow -parallel & -normal direction) ---
+    # normal & parallel vectors
+    e_p = np.array([ np.cos(alpha_1), np.sin(alpha_1)]) # chord-parallel vector
+    e_n = np.array([-np.sin(alpha_1), np.cos(alpha_1)]) # chord-normal vector
+
+    # total force
+    F_f_parallel = float(F_xy_vec @ e_p) # force along chord (downstream is +ve)
+    F_f_normal   = float(F_xy_vec @ e_n) # force normal to chord (up is +ve)
+    F_flow_vec = np.array([F_f_parallel, F_f_normal])
+
+    # force coefficient
+    forcecoeff_flow = F_flow_vec / (q_inf * chord) # (Cd_chord, Cl_chord)
+
+    # circulation
+    circulation_flow = F_f_normal / (rho * W_1) # in airfoil frame axis
+
+    # --- forces (airfoil -parallel & -normal direction) ---
+    # normal & parallel vectors
+    n_p = np.array([ np.cos(beta), np.sin(beta)]) # chord-parallel vector
+    n_n = np.array([-np.sin(beta), np.cos(beta)]) # chord-normal vector
+
+    # total force
+    F_a_parallel = float(F_xy_vec @ n_p) # force along chord (downstream is +ve)
+    F_a_normal   = float(F_xy_vec @ n_n) # force normal to chord (up is +ve)
+    F_airfoil_vec = np.array([F_a_parallel, F_a_normal])
+
+    # force coefficient
+    forcecoeff_airfoil = F_airfoil_vec / (q_inf * chord) # (Cd_chord, Cl_chord)
+
+    # circulation
+    circulation_airfoil = F_a_normal / (rho * W_1) # in airfoil frame axis
 
     if plot_cp:
         # --- TE-clean plotting: drop the two TE corner nodes and draw a short bridge ---
@@ -130,21 +169,17 @@ def airfoil_performance(geom: dict, flow: dict, coup, gamma_b,
             plt.savefig(filepath, dpi=300, bbox_inches='tight') # high-res, cropped
             plt.close()
 
-    # ===============================================
-    ## Blade force in axial and tangential directions
-    # ===============================================
-    lift_y = lift * np.cos(beta)
-    lift_x = lift * np.sin(beta)
-
     # ======================================
     ## Results
     # ======================================
     results = dict()
-    results["vorticity"]   = gamma_b
-    results["circulation"] = circulation
-    results["CL"]          = CL
-    results["Lift"]        = lift
-    results["lift_axial"]  = lift_x ; results["lift_tan"] = lift_y
+    results["vorticity"]           = gamma_b
+    results["circulation_flow"]    = circulation_flow
+    results["circulation_airfoil"] = circulation_airfoil
+    results["force_flow"]          = F_flow_vec
+    results["force_airfoil"]       = F_airfoil_vec
+    results["forcecoeff_flow"]     = forcecoeff_flow
+    results["forcecoeff_airfoil"]  = forcecoeff_airfoil
     results["Cp"]          = Cp
     results["V_surface"]   = Vs
     results["U_in"]        = U_1
@@ -160,13 +195,24 @@ def airfoil_performance(geom: dict, flow: dict, coup, gamma_b,
     return results, airfoil
 
 
-def display_airfoil_performance(results, airfoil):
+def display_airfoil_performance(results, flow, airfoil):
+
+    # --- unpack values ---
+    Re = flow["Re"]
+
+    Fx   , Fy    = results["force_flow"][0]     , results["force_flow"][1]
+    Cd_Fx, Cl_Fy = results["forcecoeff_flow"][0], results["forcecoeff_flow"][1]
+
+    drag_airfoil, lift_airfoil = results["force_airfoil"][0]     , results["force_airfoil"][1]
+    Cd_airfoil  , Cl_airfoil   = results["forcecoeff_airfoil"][0], results["forcecoeff_airfoil"][1]
 
     print(f"\n-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --")
     print("Results : AIRFOIL\n" \
           "Solver  : Vortex Panel Method\n" \
-          "Flow    : Inviscid\n")
-
+          "Flow    : Inviscid\n" \
+          f"Reynolds number  = {Re/1.0e6:.2f} (x10^6)\n"
+    )
+    
 
     print(
         f"U_in  = {results['U_in']:2.1f} m/s  |  "
@@ -175,14 +221,23 @@ def display_airfoil_performance(results, airfoil):
         f"alpha_in  = {results['alpha_in']:2.2f} deg"
     )
 
-    print(f"Airfoil tilt angle         = {airfoil['tilt_angle']:.1f} deg (-ve means downwards tilt)")
-    print(f"Effective angle-of-attack  = {results['alpha_in']+airfoil['tilt_angle']:.1f} deg (-ve means downwards tilt)\n")
+    print(f"Airfoil tilt angle         = {airfoil['tilt_angle']:.1f} deg (+ve means upwards tilt)")
+    print(f"Effective angle-of-attack  = {results['alpha_in']+airfoil['tilt_angle']:.1f} deg (+ve means upwards tilt)\n")
+
+    print("(\nFreestream frame)")
+    print(f"Fy               = {Fy:.0f} N | {Fy/9.81:.0f} kg (force in y-direction) ")
+    print(f"Fx               = {Fx:.0f} N | {Fx/9.81:.0f} kg (force in x-direction)")
+    print(f"Lift coefficient = {Cl_Fy:.2f}")
+    print(f"Drag coefficient = {Cd_Fx:.2f}")
+    print(f"Circulation      = {results['circulation_flow']:.2f} m^2/s")
     
-    print(f"Circulation      = {results['circulation']:.2f} m^2/s")
-    print(f"Lift coefficient = {results['CL']:.2f}")
-    print(f"Lift             = {results['Lift']:.0f} N | {results['Lift']/9.81:.0f} kg ")
-    print(f"Fy               = {results['lift_tan']:.0f} N | {results['lift_tan']/9.81:.0f} kg (force in tangential direction | torque force) ")
-    print(f"Fx               = {results['lift_axial']:.0f} N | {results['lift_axial']/9.81:.0f} kg (force in axial direction | +ve = +x direction)")
+    print("(\nAirfoil frame)")
+    print(f"Lift             = {lift_airfoil:.0f} N | {lift_airfoil/9.81:.0f} kg ")
+    print(f"Drag             = {drag_airfoil:.0f} N | {drag_airfoil/9.81:.0f} kg ")
+    print(f"Lift coefficient = {Cl_airfoil:.2f}")
+    print(f"Drag coefficient = {Cd_airfoil:.2f}")
+    print(f"L/D ratio        = {lift_airfoil/drag_airfoil:.2f}")
+    print(f"Circulation      = {results['circulation_airfoil']:.2f} m^2/s")
 
     print(f"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n")
 
