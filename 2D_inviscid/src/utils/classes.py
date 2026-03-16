@@ -23,17 +23,17 @@ class AirfoilSection:
         # Load & resample geometry
         x, y = load_airfoil_xy(filename)
         xdata, ydata, chord, *_  = rearrange_airfoil(x, y)
-        xnew, ynew = resample_airfoil_cosine_finite_TE(xdata, ydata, n_points=m)
-        xnew, ynew = rotate_airfoil_about_te(xnew, ynew, beta_rad)
+        x_resampled, y_resampled = resample_airfoil_cosine_finite_TE(xdata, ydata, n_points=m)
+        x_rotated, y_rotated = rotate_airfoil_about_te(x_resampled, y_resampled, beta_rad)
 
         # Panel preperation
-        geom = data_preparation(xnew, ynew, len(xnew))
+        geom = data_preparation(x_rotated, y_rotated)
 
         # Store raw geometry
-        geom["x"], geom["y"] = xnew, ynew    # aerfoil nodal points
-        geom["n_panels"] = len(geom["xmid"]) # number of panels per aerfoil cross-section
-        geom["chord"]    = chord             # chord length [m]
-        geom["beta"]     = beta_rad          # blade tilt angle [deg]
+        geom["x"], geom["y"] = x_rotated, y_rotated # aerfoil nodal points
+        geom["n_panels"] = len(geom["xmid"])        # number of panels per aerfoil cross-section
+        geom["chord"]    = chord                    # chord length [m]
+        geom["beta"]     = beta_rad                 # blade tilt angle [deg]
 
         self.geom = geom
 
