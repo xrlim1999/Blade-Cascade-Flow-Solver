@@ -24,7 +24,7 @@ class AirfoilSection:
         x, y = load_airfoil_xy(filename)
         xdata, ydata, chord, *_  = rearrange_airfoil(x, y)
         xnew, ynew = resample_airfoil_cosine_finite_TE(xdata, ydata, n_points=m)
-        xnew, ynew = rotate_airfoil_about_te(xnew, ynew, beta_rad, pivot="mid")
+        xnew, ynew = rotate_airfoil_about_te(xnew, ynew, beta_rad)
 
         # Panel preperation
         geom = data_preparation(xnew, ynew, len(xnew))

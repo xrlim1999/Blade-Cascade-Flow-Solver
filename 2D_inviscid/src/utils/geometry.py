@@ -314,9 +314,9 @@ def resample_airfoil_cosine_finite_TE(x, y, n_points : int = 200):
     beta = np.linspace(0, np.pi, n_side + 1)
 
     # cosine transformation: equal Δbeta → unequal Δx
-    # beta=0   → x=0.0 (LE)
-    # beta=π/2 → x=0.5 (midchord)
-    # beta=π   → x=1.0 (TE)
+    #   beta=0   → x=0.0 (LE)
+    #   beta=π/2 → x=0.5 (midchord)
+    #   beta=π   → x=1.0 (TE)
     x_cos = 0.5 * (1 - np.cos(beta))
 
     # evaluate upper and lower surface y values at cosine x stations
@@ -336,20 +336,25 @@ def resample_airfoil_cosine_finite_TE(x, y, n_points : int = 200):
 
     return x_new, y_new
 
-def rotate_about_point(x, y, xc, yc, beta_rad, counterclockwise_positive: bool = True):
-    """Rigid rotation of all nodes about (xc,yc)."""
-    if not counterclockwise_positive:
-        beta_rad = -beta_rad
+def _rotate_about_point(x, y, x_pivot_pt, y_pivot_pt, beta_rad):
+    """
+    Rigid rotation of all nodes about pivot points (x_pivot_pt, y_pivot_pt)
+    """
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
 
-    c, s = np.cos(beta_rad), np.sin(beta_rad)
+    cosine = np.cos(beta_rad)
+    sine   = np.sin(beta_rad)
 
-    x = np.asarray(x, float); y = np.asarray(y, float)
-    xr = xc + (x - xc)*c - (y - yc)*s
-    yr = yc + (x - xc)*s + (y - yc)*c
+    dx = x_pivot_pt - x
+    dy = y_pivot_pt - y
 
-    return xr, yr
+    x_rotated = x_pivot_pt - (dx * cosine - dy * sine)
+    y_rotated = y_pivot_pt - (dx * sine + dy * cosine)
 
-def reposition_airfoil(x, y, tol: float = 1e-12):
+    return x_rotated, y_rotated
+
+def _reposition_airfoil(x, y):
     """
     Reposition the airfoil so that:
       - Leading edge (min x) is at x = 0
@@ -360,7 +365,7 @@ def reposition_airfoil(x, y, tol: float = 1e-12):
     x, y : array-like
         Closed-loop airfoil coordinates (TE->upper->LE->lower->TE).
     tol : float, optional
-        Small tolerance to guard against numerical issues.
+        Small tolerance to guard against numerical issues.  
 
     Returns
     -------
@@ -381,30 +386,53 @@ def reposition_airfoil(x, y, tol: float = 1e-12):
 
     return xr, yr
 
-def rotate_airfoil_about_te(x, y, beta_rad, pivot : str = 'mid'):
+def rotate_airfoil_about_te(x, y, beta_rad):
     """
-    Rotate the closed airfoil loop about the trailing edge by beta_deg.
-    pivot: 'mid'  -> midpoint between upper/lower TE nodes (recommended)
-           'upper'-> upper TE node
+    Rotate a closed airfoil loop about its trailing edge midpoint.
+
+    The pivot point is taken as the midpoint between the upper and lower
+    trailing edge nodes (index 0 and index -1). A positive beta_rad rotates
+    the leading edge upward (clockwise when viewed conventionally with x
+    pointing right).
+
+    After rotation, the airfoil is repositioned so that the leading edge
+    sits at x = 0 and the geometry is vertically centered about y = 0.
+
+    Parameters
+    ----------
+    x, y : array-like
+        Closed-loop airfoil coordinates ordered TE->upper->LE->lower->TE.
+    beta_rad : float
+        Rotation angle in radians. Positive values tilt the leading edge up.
+
+    Returns
+    -------
+    x_out, y_out : ndarray
+        Rotated and repositioned airfoil coordinates, same ordering as input.
     """
     # upper and lower TE node index
-    i_u = (x.shape[0]-1)
-    i_l = 0
+    i_u = 0
+    i_l = (len(x)-1)
 
-    if pivot == 'mid':
-        xc = 0.5*(x[i_u] + x[i_l])
-        yc = 0.5*(y[i_u] + y[i_l])
-    elif pivot == 'upper':
-        xc, yc = x[i_u], y[i_u]
-    else:
-        raise ValueError("pivot must be 'mid' or 'upper'")
+    # ---------------------------------
+    # Determine pivot point
+    #   - taken as center of 2 TE nodes
+    # ---------------------------------
+    x_pivot_pt = 0.5*(x[i_u] + x[i_l])
+    y_pivot_pt = 0.5*(y[i_u] + y[i_l])
 
-    xr, yr = rotate_about_point(x, y, xc, yc, beta_rad, counterclockwise_positive=False)
+    # ---------------------------------
+    # Perform airfoil rotation
+    # ---------------------------------
+    x_rotated, y_rotated = _rotate_about_point(x, y, x_pivot_pt, y_pivot_pt, beta_rad)
 
     # keep exact closure if your first and last nodes are duplicates
     if np.allclose([x[0], y[0]], [x[-1], y[-1]]):
-        xr[-1], yr[-1] = xr[0], yr[0]
+        x_rotated[-1], y_rotated[-1] = x_rotated[0], y_rotated[0]
 
-    xr_repos, yr_repos = reposition_airfoil(xr, yr)
+    # ----------------------------------
+    # Reposition airfoil at center (x,y)
+    # ----------------------------------
+    xr_repos, yr_repos = _reposition_airfoil(x_rotated, y_rotated)
 
     return xr_repos, yr_repos

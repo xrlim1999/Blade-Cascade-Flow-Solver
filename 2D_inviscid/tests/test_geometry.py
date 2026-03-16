@@ -158,7 +158,7 @@ class TestResampleAirfoilCosineFiniteTE:
 # ===========================================================================
 class TestRotateAirfoilAboutTe:
 
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def setup(self, raw_coords):
         """ Runs once per class — stores [cache] coords on self for all tests to use """
         self.x, self.y = raw_coords
@@ -167,12 +167,28 @@ class TestRotateAirfoilAboutTe:
 
         self.n_points = 100
 
-        xnew, ynew = resample_airfoil_cosine_finite_TE(
+        self.xnew, self.ynew = resample_airfoil_cosine_finite_TE(
             self.xdata, self.ydata, n_points=self.n_points
         )
 
         self.beta_deg = 10.0
         self.beta_rad = np.deg2rad(self.beta_deg)
-        self.xnew, self.ynew = rotate_airfoil_about_te(xnew, ynew, self.beta_rad, pivot="mid")
+        self.x_rotated, self.y_rotated = rotate_airfoil_about_te(self.xnew, self.ynew, self.beta_rad)
 
-    
+    def test_rotational_correctness(self):
+        # No rotation
+        x_rotated, y_rotated = rotate_airfoil_about_te(self.xnew, self.ynew, beta_rad=0.0)
+        rand = len(self.xnew) // 2
+        assert x_rotated[0] == pytest.approx(self.xnew[0], abs=1e-6) and y_rotated[0] == self.ynew[0]
+        assert x_rotated[-1] == pytest.approx(self.xnew[-1], abs=1e-6) and y_rotated[-1] == self.ynew[-1]
+        assert x_rotated[rand] == pytest.approx(self.xnew[rand], abs=1e-6) and y_rotated[rand] == self.ynew[rand]
+
+        # 180 degrees rotation
+        x_rotated, y_rotated = rotate_airfoil_about_te(self.xnew, self.ynew, beta_rad=np.pi)
+        assert y_rotated[0] == pytest.approx(-self.ynew[0], abs=1e-6)
+        assert y_rotated[-1] == pytest.approx(-self.ynew[-1], abs=1e-6)
+        assert y_rotated[rand] == pytest.approx(-self.ynew[rand], abs=1e-6)
+
+    def test_repositioning(self):
+        assert min(self.x_rotated) == pytest.approx(0.0, abs=1e-6)                       # LE at x = 0.0
+        assert min(self.y_rotated) + max(self.y_rotated) == pytest.approx(0.0, abs=1e-6) # vertically centered
