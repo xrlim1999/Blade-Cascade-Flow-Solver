@@ -2,7 +2,32 @@ import numpy as np
 import math
 
 def data_preparation(x, y):
+    """
+    Compute panel geometry from a set of ordered airfoil nodes.
 
+    For each panel connecting adjacent nodes, computes the panel length,
+    sine and cosine of the panel tangent angle, the tangent slope angle,
+    and the panel midpoint coordinates. The final panel connects the last
+    node back to the first, closing the loop.
+
+    Parameters
+    ----------
+    x, y : array-like
+        Ordered airfoil node coordinates, shape (n,).
+        Expected ordering: TE->upper->LE->lower->TE.
+
+    Returns
+    -------
+    geom : dict
+        Dictionary containing panel geometry arrays, each of shape (n,):
+        
+        "ds"     : panel lengths [m]
+        "sine"   : sine of panel tangent angle
+        "cosine" : cosine of panel tangent angle
+        "slope"  : panel tangent angle measured from horizontal [rad]
+        "xmid"   : x coordinates of panel midpoints
+        "ymid"   : y coordinates of panel midpoints
+    """
     n = len(x) # number of datatpoints
 
     ds     = np.zeros(n)

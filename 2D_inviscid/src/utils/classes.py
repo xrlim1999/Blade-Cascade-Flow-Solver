@@ -32,8 +32,8 @@ class AirfoilSection:
         # Store raw geometry
         geom["x"], geom["y"] = x_rotated, y_rotated # aerfoil nodal points
         geom["n_panels"] = len(geom["xmid"])        # number of panels per aerfoil cross-section
-        geom["chord"]    = chord                    # chord length [m]
-        geom["beta"]     = beta_rad                 # blade tilt angle [deg]
+        geom["chord"]    = chord                    # chord length [normalised to 1]
+        geom["beta"]     = beta_rad                 # blade tilt angle [rad]
 
         self.geom = geom
 

@@ -21,7 +21,6 @@ def solve_airfoil(
     plot_airfoil: bool, airfoil_save: bool,
     plot_flow: bool, track_velocity: bool, track_particle:  bool, flow_save: bool, flowplot_params: dict
 ):
-    
     """
     Single-API call pipeline for a single blade row.
     Returns: results_fan, results_cascade, flow, blade_profile
