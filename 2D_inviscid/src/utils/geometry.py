@@ -343,6 +343,8 @@ def _rotate_about_point(x, y, x_pivot_pt, y_pivot_pt, beta_rad):
     x = np.asarray(x, float)
     y = np.asarray(y, float)
 
+    beta_rad *= -1
+
     cosine = np.cos(beta_rad)
     sine   = np.sin(beta_rad)
 

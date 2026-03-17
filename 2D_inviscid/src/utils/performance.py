@@ -52,7 +52,7 @@ def build_tangential_matrix_isolated(xmid, ymid, ds, cosine, sine):
 
 
 def airfoil_performance(geom: dict, flow: dict, coup, gamma_b, 
-                         plot_cp=False, plot_save=True):
+                         plot_cp=False, plot_save_cp=True):
 
     # --- unpack geometry ---
     xmid, ymid   = geom["xmid"], geom["ymid"]
@@ -158,7 +158,7 @@ def airfoil_performance(geom: dict, flow: dict, coup, gamma_b,
         plt.minorticks_on()  # enable minor ticks
         plt.grid(True, which='both', linestyle=':', linewidth=0.5)
 
-        if plot_save:
+        if plot_save_cp:
             # --- create a folder if it doesn't exist ---
             out_dir = "figures/Cp"
             os.makedirs(out_dir, exist_ok=True)
@@ -207,7 +207,7 @@ def display_airfoil_performance(results, flow, airfoil):
     Cd_airfoil  , Cl_airfoil   = results["forcecoeff_airfoil"][0], results["forcecoeff_airfoil"][1]
 
     print(f"\n-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --")
-    print("Results : AIRFOIL\n" \
+    print("Subject : AIRFOIL\n" \
           "Solver  : Vortex Panel Method\n" \
           "Flow    : Inviscid\n" \
           f"Reynolds number  = {Re/1.0e6:.2f} (x10^6)\n"
@@ -224,14 +224,14 @@ def display_airfoil_performance(results, flow, airfoil):
     print(f"Airfoil tilt angle         = {airfoil['tilt_angle']:.1f} deg (+ve means upwards tilt)")
     print(f"Effective angle-of-attack  = {results['alpha_in']+airfoil['tilt_angle']:.1f} deg (+ve means upwards tilt)\n")
 
-    print("(\nFreestream frame)")
+    print("(Freestream frame)")
     print(f"Fy               = {Fy:.0f} N | {Fy/9.81:.0f} kg (force in y-direction) ")
     print(f"Fx               = {Fx:.0f} N | {Fx/9.81:.0f} kg (force in x-direction)")
     print(f"Lift coefficient = {Cl_Fy:.2f}")
     print(f"Drag coefficient = {Cd_Fx:.2f}")
     print(f"Circulation      = {results['circulation_flow']:.2f} m^2/s")
     
-    print("(\nAirfoil frame)")
+    print("\n(Airfoil frame)")
     print(f"Lift             = {lift_airfoil:.0f} N | {lift_airfoil/9.81:.0f} kg ")
     print(f"Drag             = {drag_airfoil:.0f} N | {drag_airfoil/9.81:.0f} kg ")
     print(f"Lift coefficient = {Cl_airfoil:.2f}")

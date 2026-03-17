@@ -1,0 +1,16 @@
+# control which plots to generate
+{
+    # --- Airfoil ---
+    "plot_airfoil"     : True,
+    "save_plot_airfoil": True,
+
+    # --- Pressure Coefficient ---
+    "plot_cp"     : True,
+    "save_plot_cp": True,
+
+    # --- Flow visualisation ---
+    "plot_flow"     : True,
+    "track_particle": True,
+    "track_velocity": False,
+    "save_plot_flow": False
+}

@@ -1,0 +1,6 @@
+# Airfoil settings
+{
+    "tilt_angle_deg"   : 0.0,        # (+ve --> upwards rotation of LE)   --> float
+    "num_sample_points": 100,        # number of resample points          --> int
+    "airfoil_name"     : "NACA0012", # filename of airfoil in "/data/..." --> string
+}

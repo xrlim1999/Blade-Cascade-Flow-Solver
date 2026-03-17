@@ -64,17 +64,17 @@ class AirfoilSolver:
         self.geom = Airfoil_section.geom
         self.flow = Flow_section.flow
     
-    def solve(self, plot_cp: bool, plot_save=True):
+    def solve(self, plot_cp: bool, plot_save_cp=True):
 
         # --- Build RHS ---
-        self.rhs = right_hand_side_airfoil(self.geom, self.flow, delta=None, Ue=None)
+        self.rhs = right_hand_side_airfoil(self.geom, self.flow)
 
         #  --- iteratively solve for bound vorticity ---
-        coup, gamma = vorticity_solution_kutta(self.geom, self.flow, self.rhs, mode='gamma')
+        coup, gamma = vorticity_solution_kutta(self.geom, self.rhs, mode="gamma")
 
         # --- compute performance of current fan stage ---
         self.results, self.airfoil = airfoil_performance(self.geom, self.flow, coup, gamma, 
-                                                        plot_cp=plot_cp, plot_save=plot_save)
+                                                        plot_cp=plot_cp, plot_save_cp=plot_save_cp)
 
         return self.results, self.airfoil
     

@@ -1,0 +1,7 @@
+# Flow operating conditions
+{
+    "rho": 1.225,        # static air density [kg/m^3]        --> float
+    "W0": 50.0,          # absolute freestream velocity [m/s] --> float
+    "dynvisc": 1.81e-5,  # dynamic viscosity [kg/(m·s)]       --> float
+    "alpha0_deg": 10.0   # flow angle [deg], +ve = upwards    --> float
+}
